@@ -1,0 +1,32 @@
+# ---------- frontend ----------
+node_modules/
+dist/
+*.local
+npm-debug.log*
+
+# ---------- backend (Python) ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ---------- общее ----------
+.env
+.env.*
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+.next/
+build/

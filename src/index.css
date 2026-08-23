@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Unbounded", "Manrope", sans-serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-paper: #f0f3ed;
+  --color-card: #fafbf7;
+  --color-ink: #17251e;
+  --color-soft: #4b5a51;
+  --color-faint: #83918a;
+  --color-line: #d9e0d5;
+  --color-moss: #e2e9de;
+  --color-pine: #1e5c48;
+  --color-pine-deep: #0e2b21;
+  --color-pine-dark: #143a2d;
+  --color-lime: #d9f26b;
+  --color-ochre: #b97f2f;
+  --color-rust: #b23a2e;
+  --color-steel: #2e66a7;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(1100px 520px at 88% -8%, rgba(30, 92, 72, 0.11), transparent 62%),
+    radial-gradient(900px 480px at -12% 108%, rgba(185, 127, 47, 0.09), transparent 60%),
+    linear-gradient(rgba(23, 37, 30, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 37, 30, 0.035) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    34px 34px,
+    34px 34px;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-pine-deep);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-r {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sheet-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drawer-l {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.07); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(30, 92, 72, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(30, 92, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 92, 72, 0); }
+}
+@keyframes draw-stroke {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -16px, 0); }
+}
+
+.anim-rise { animation: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.panel-in { animation: sheet-up 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (min-width: 1024px) {
+  .panel-in { animation: slide-r 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+}
+.anim-slide-r { animation: slide-r 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-sheet-up { animation: sheet-up 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-drawer { animation: drawer-l 0.36s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-pop { animation: pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-toast { animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-drift { animation: drift 9s ease-in-out infinite; }
+.pulse-live { animation: pulse-ring 2s ease-out infinite; }
+
+.check-draw {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: draw-stroke 0.5s 0.2s ease-out forwards;
+}
+.circle-draw {
+  stroke-dasharray: 230;
+  stroke-dashoffset: 230;
+  animation: draw-stroke 0.7s ease-out forwards;
+}
+
+/* ---------- patterns ---------- */
+.lunch-stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(185, 127, 47, 0.18) 0 6px,
+    rgba(185, 127, 47, 0.05) 6px 13px
+  );
+}
+.booked-hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(178, 58, 46, 0.09) 0 6px,
+    transparent 6px 13px
+  );
+}
+
+/* ---------- scrollbars ---------- */
+.nice-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.nice-scroll::-webkit-scrollbar-track { background: transparent; }
+.nice-scroll::-webkit-scrollbar-thumb {
+  background: rgba(30, 92, 72, 0.28);
+  border-radius: 8px;
+}
+.nice-scroll::-webkit-scrollbar-thumb:hover { background: rgba(30, 92, 72, 0.5); }
+.nice-scroll-dark::-webkit-scrollbar { width: 8px; }
+.nice-scroll-dark::-webkit-scrollbar-thumb {
+  background: rgba(217, 242, 107, 0.22);
+  border-radius: 8px;
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
