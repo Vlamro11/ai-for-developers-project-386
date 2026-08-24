@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ОКНА — сервис онлайн-записи
 
 Упрощённый аналог [Cal.com]: гость выбирает формат встречи, день и свободное окно —
@@ -138,7 +137,3 @@ npm run dev          # демо-режим на http://localhost:5173
 ## Лицензия
 
 Учебный проект.
-=======
-### Hexlet tests and linter status:
-[![Actions Status](https://github.com/Vlamro11/ai-for-developers-project-386/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Vlamro11/ai-for-developers-project-386/actions)
->>>>>>> a403dfa4436b6484643320ddd4296c207349dd1c
