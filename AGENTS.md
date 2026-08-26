@@ -10,8 +10,10 @@
 ## Commands
 - **Frontend dev**: `cd frontend && npm run dev`
 - **Frontend build**: `cd frontend && npm run build`
-- **Backend dev**: `PYTHONPATH=backend python3 -m uvicorn main:app --reload --port 8000`
-- **Backend test**: `PYTHONPATH=backend python3 backend/test_main.py`
+- **Backend dev (Hexlet-graded API)**: `cd backend && PYTHONPATH=. python3 -m uvicorn app.main:app --reload --port 8000`
+- **Backend test (Hexlet-graded API)**: `cd backend && PYTHONPATH=. python3 -m pytest -q`
+- **Backend dev (legacy custom API used by current frontend)**: `PYTHONPATH=backend python3 -m uvicorn main:app --reload --port 8000`
+- **Backend test (legacy custom API)**: `PYTHONPATH=backend python3 backend/test_main.py`
 - **Docker Production**: `docker compose up --build`
 
 ## Key Domain Rules

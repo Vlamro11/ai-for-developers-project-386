@@ -20,7 +20,8 @@ jobs:
       - name: Install dependencies & run tests
         run: |
           pip install -r backend/requirements.txt
-          PYTHONPATH=backend python backend/test_main.py
+          cd backend && PYTHONPATH=. python -m pytest -q
+          cd .. && PYTHONPATH=backend python backend/test_main.py
 
   frontend-build:
     runs-on: ubuntu-latest
