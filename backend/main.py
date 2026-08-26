@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices, ConfigDict
 from typing import Optional, List
 from datetime import datetime, timedelta, time
 import dateutil.parser
@@ -16,28 +16,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Models matching frontend API contract
+# Models matching frontend API contract & accepting snake_case / camelCase
 class BookingInfo(BaseModel):
-    guestName: str
-    guestContact: str
+    model_config = ConfigDict(populate_by_name=True)
+    guestName: str = Field(..., validation_alias=AliasChoices("guestName", "guest_name"))
+    guestContact: str = Field(..., validation_alias=AliasChoices("guestContact", "guest_contact"))
     comment: Optional[str] = None
-    bookedAt: str
+    bookedAt: Optional[str] = Field(None, validation_alias=AliasChoices("bookedAt", "booked_at"))
 
 class Slot(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
     id: str
-    startTime: str  # ISO string
-    endTime: str    # ISO string
-    isBooked: bool = False
+    startTime: str = Field(..., validation_alias=AliasChoices("startTime", "start_time"))
+    endTime: str = Field(..., validation_alias=AliasChoices("endTime", "end_time"))
+    isBooked: bool = Field(False, validation_alias=AliasChoices("isBooked", "is_booked"))
     booking: Optional[BookingInfo] = None
 
 class CreateSlotDto(BaseModel):
-    date: str       # YYYY-MM-DD
-    startTime: str  # HH:MM
+    model_config = ConfigDict(populate_by_name=True)
+    date: str
+    startTime: str = Field(..., validation_alias=AliasChoices("startTime", "start_time"))
 
 class CreateBookingDto(BaseModel):
-    slotId: str
-    guestName: str
-    guestContact: str
+    model_config = ConfigDict(populate_by_name=True)
+    slotId: str = Field(..., validation_alias=AliasChoices("slotId", "slot_id"))
+    guestName: str = Field(..., validation_alias=AliasChoices("guestName", "guest_name"))
+    guestContact: str = Field(..., validation_alias=AliasChoices("guestContact", "guest_contact"))
     comment: Optional[str] = None
 
 # In-memory database
@@ -81,6 +85,11 @@ def generate_default_slots() -> List[Slot]:
 
 # Initialize in-memory store
 slots_db = generate_default_slots()
+
+@app.get("/")
+@app.get("/api")
+def health_check():
+    return {"status": "ok", "service": "Calls Booking API"}
 
 @app.get("/api/slots", response_model=List[Slot])
 def get_slots():
