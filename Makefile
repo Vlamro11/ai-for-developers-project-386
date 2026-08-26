@@ -8,6 +8,7 @@ start:
 	docker compose up --build
 
 test:
+	cd backend && PYTHONPATH=. python3 -m pytest -q
 	PYTHONPATH=backend python3 backend/test_main.py
 
 lint:
