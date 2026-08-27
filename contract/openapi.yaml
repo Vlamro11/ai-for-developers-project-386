@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Booking Calls API
+  description: >
+    API для приложения предварительной записи на телефонный разговор.
+    Владелец публикует доступные интервалы (рабочие часы на конкретные дни),
+    система нарезает их на слоты по 30 минут. Гости выбирают свободный слот
+    в пределах скользящего окна записи (14 дней от текущей даты) и бронируют его.
+    Авторизации нет. Хранение данных — в памяти backend-процесса.
+  version: "1.0.0"
+
+servers:
+  - url: /api
+    description: Base path, проксируется на backend через nginx
+
+tags:
+  - name: availability
+    description: Просмотр доступности слотов гостем (для календаря)
+  - name: slots
+    description: Просмотр слотов конкретного дня
+  - name: bookings
+    description: Создание записи на звонок
+  - name: owner
+    description: Публикация владельцем доступных интервалов (без авторизации)
+
+paths:
+  /availability:
+    get:
+      operationId: getAvailability
+      tags: [availability]
+      summary: Список дней в окне записи с признаком наличия свободных слотов
+      description: >
+        Используется фронтендом для подсветки дней в календаре.
+        Возвращает только дни в пределах скользящего окна `[now, now + 14 дней]`.
+        Дни, которые уже прошли, не возвращаются.
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: >
+            Начало диапазона (YYYY-MM-DD). По умолчанию — текущая дата (UTC).
+            Не может быть раньше текущей даты.
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: >
+            Конец диапазона (YYYY-MM-DD). По умолчанию — текущая дата + 14 дней.
+            Не может выходить за пределы окна записи.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Список дней с агрегированной информацией по слотам
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from:
+                    type: string
+                    format: date
+                  to:
+                    type: string
+                    format: date
+                  days:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AvailabilityDay"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /slots:
+    get:
+      operationId: getSlots
+      tags: [slots]
+      summary: Список слотов на конкретный день
+      description: >
+        Возвращает слоты (по 30 минут) на указанную дату со статусами `free`/`booked`.
+        Если дата вне окна записи `[now, now + 14 дней]` — возвращается пустой список.
+      parameters:
+        - name: date
+          in: query
+          required: true
+          description: Дата в формате YYYY-MM-DD (UTC)
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Список слотов на день
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                  slots:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Slot"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /bookings:
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Записаться на выбранный свободный слот
+      description: >
+        Атомарно бронирует слот: успешным (`201`) может быть только один
+        параллельный запрос на один и тот же слот, остальные получают `409`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "201":
+          description: Слот успешно забронирован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Слот с указанным slotId не найден
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >
+            Слот уже забронирован, либо находится вне текущего окна записи
+            (окно пересчитывается динамически, и слот может "устареть"
+            между получением списка и попыткой бронирования)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /owner/availability:
+    get:
+      operationId: listOwnerAvailability
+      tags: [owner]
+      summary: Список опубликованных владельцем интервалов доступности
+      description: >
+        Без авторизации, согласно ТЗ. Используется экраном владельца для
+        просмотра уже опубликованных интервалов.
+      responses:
+        "200":
+          description: Список интервалов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailabilityInterval"
+    post:
+      operationId: createOwnerAvailability
+      tags: [owner]
+      summary: Опубликовать доступный интервал (рабочие часы на день)
+      description: >
+        Из интервала система нарезает слоты по 30 минут. Интервал должен
+        укладываться в окно записи `[now, now + 14 дней]`, иначе — `400`.
+        Пересекающиеся с уже опубликованными интервалы — `409`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAvailabilityIntervalRequest"
+      responses:
+        "201":
+          description: Интервал опубликован, слоты нарезаны
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityInterval"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Интервал пересекается с уже опубликованным
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  responses:
+    BadRequest:
+      description: Некорректные параметры запроса
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    SlotStatus:
+      type: string
+      enum: [free, booked]
+
+    Slot:
+      type: object
+      required: [id, startAt, endAt, status]
+      properties:
+        id:
+          type: string
+          example: "slot_20260901_0930"
+        startAt:
+          type: string
+          format: date-time
+          description: Начало слота в UTC (ISO 8601)
+          example: "2026-09-01T09:30:00Z"
+        endAt:
+          type: string
+          format: date-time
+          description: Конец слота в UTC (ISO 8601), всегда startAt + 30 минут
+          example: "2026-09-01T10:00:00Z"
+        status:
+          $ref: "#/components/schemas/SlotStatus"
+
+    AvailabilityDay:
+      type: object
+      required: [date, hasFreeSlots, freeSlotsCount, totalSlotsCount]
+      properties:
+        date:
+          type: string
+          format: date
+        hasFreeSlots:
+          type: boolean
+        freeSlotsCount:
+          type: integer
+          minimum: 0
+        totalSlotsCount:
+          type: integer
+          minimum: 0
+
+    AvailabilityInterval:
+      type: object
+      required: [id, date, startTime, endTime]
+      properties:
+        id:
+          type: string
+          example: "avail_20260901_0900_1300"
+        date:
+          type: string
+          format: date
+          description: Дата, на которую опубликован интервал (UTC)
+        startTime:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+          description: Время начала интервала в формате HH:MM (UTC)
+          example: "09:00"
+        endTime:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+          description: Время конца интервала в формате HH:MM (UTC)
+          example: "13:00"
+
+    CreateAvailabilityIntervalRequest:
+      type: object
+      required: [date, startTime, endTime]
+      properties:
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+          example: "09:00"
+        endTime:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+          example: "13:00"
+
+    CreateBookingRequest:
+      type: object
+      required: [slotId, guestName, guestPhone]
+      properties:
+        slotId:
+          type: string
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        guestPhone:
+          type: string
+          description: Номер телефона гостя в любом читаемом формате
+          minLength: 3
+          maxLength: 32
+          example: "+79990001122"
+
+    Booking:
+      type: object
+      required: [id, slotId, guestName, guestPhone, startAt, endAt, createdAt]
+      properties:
+        id:
+          type: string
+        slotId:
+          type: string
+        guestName:
+          type: string
+        guestPhone:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Машиночитаемый код ошибки
+          example: "slot_already_booked"
+        message:
+          type: string
+          example: "Слот уже забронирован"
