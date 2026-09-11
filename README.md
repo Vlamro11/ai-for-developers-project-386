@@ -8,6 +8,10 @@
 Учебный проект Хекслета: https://ru.hexlet.io/programs/ai-for-developers
 Как это должно работать: https://files.hexlet.app/a/2ipc5m
 
+## Демо
+
+Публичная ссылка на развёрнутое приложение: TODO — добавить после деплоя на Render.
+
 ## Стек
 
 - Разное
