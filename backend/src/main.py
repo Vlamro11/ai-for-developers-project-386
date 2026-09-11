@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.domain.errors import DomainError
 from src.routes.availability import router as availability_router
@@ -30,3 +33,12 @@ app.include_router(owner_router, prefix="/api")
 @app.get("/api/health", tags=["health"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Раздача собранного фронтенда (SPA) в едином Docker-образе (см. корневой
+# Dockerfile). В режиме локальной разработки (uvicorn --reload из backend/
+# без собранной статики) директория отсутствует, и монтирование пропускается —
+# фронтенд в этом случае обслуживается отдельно через `npm run dev`/nginx.
+_STATIC_DIR = os.environ.get("FRONTEND_DIST_DIR", "/app/static")
+if os.path.isdir(_STATIC_DIR):
+    app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="static")
