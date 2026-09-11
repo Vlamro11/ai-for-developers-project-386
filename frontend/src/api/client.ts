@@ -5,6 +5,8 @@ export type SlotStatus = components["schemas"]["SlotStatus"];
 export type AvailabilityDay = components["schemas"]["AvailabilityDay"];
 export type Booking = components["schemas"]["Booking"];
 export type CreateBookingRequest = components["schemas"]["CreateBookingRequest"];
+export type AvailabilityInterval = components["schemas"]["AvailabilityInterval"];
+export type CreateAvailabilityIntervalRequest = components["schemas"]["CreateAvailabilityIntervalRequest"];
 export type ApiError = components["schemas"]["Error"];
 
 /** Базовый путь API. В dev проксируется Vite-девсервером, в проде — nginx. */
@@ -61,6 +63,21 @@ export function getSlots(date: string): Promise<{ date: string; slots: Slot[] }>
 
 export function createBooking(payload: CreateBookingRequest): Promise<Booking> {
   return request("/bookings", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Список уже опубликованных владельцем интервалов доступности. */
+export function getOwnerAvailability(): Promise<AvailabilityInterval[]> {
+  return request("/owner/availability");
+}
+
+/** Публикация интервала владельцем: система нарежет из него 30-минутные слоты. */
+export function createOwnerAvailability(
+  payload: CreateAvailabilityIntervalRequest,
+): Promise<AvailabilityInterval> {
+  return request("/owner/availability", {
     method: "POST",
     body: JSON.stringify(payload),
   });
